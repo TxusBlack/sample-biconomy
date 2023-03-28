@@ -1,123 +1,317 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styles from '@/styles/Home.module.css'
+// import './App.css';
+import React, { useState, useEffect } from "react";
+import { ethers } from 'ethers';
 
-const inter = Inter({ subsets: ['latin'] })
+//LA LINEA DE CODIGO 7 ES LA QUE GENERA LOS PROBLEMAS///.
+import { Biconomy } from '@biconomy/mexa';
 
-export default function Home() {
+function App()
+{
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //"stateVariables"//////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  const [userAddress, setUserAddress] = useState("noAddress");
+  const [signer, setSigner] = useState(null);
+  const [quote, setQuote] = useState("noQuote");
+  const [trustedForwarder, setTrustedForwarder] = useState("noTrustedForwarder");
+  //"inputValues stateVariables"///
+  const [normalQuoteInputValue, setNormalQuoteInputValue] = useState('');
+  const [metaQuoteInputValue, setMetaQuoteInputValue] = useState('');
+  let provider;
+
+
+  useEffect(() => {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    getScData()
+  }, [getScData]);
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //"ethersJs setUp"//////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  const tricketSmartContractAddress = "0x753c38D5ebFe0a07ED5b51467CF236700d99E459";
+  const tricketSmartContractFullAbi =
+    [
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "paramNewMetaQuote",
+            "type": "string"
+          }
+        ],
+        "name": "changeMetaQuote",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "paramNewQuote",
+            "type": "string"
+          }
+        ],
+        "name": "changeQuote",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "paramTrustedForwarder",
+            "type": "address"
+          }
+        ],
+        "name": "provisionalSetTrustedForwarder",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "msg",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "string",
+            "name": "newQuote",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "quoteChangerAddress",
+            "type": "address"
+          }
+        ],
+        "name": "setQuote",
+        "type": "event"
+      },
+      {
+        "inputs": [],
+        "name": "getTrustedForwarder",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "forwarder",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "forwarder",
+            "type": "address"
+          }
+        ],
+        "name": "isTrustedForwarder",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "quote",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "versionRecipient",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "pure",
+        "type": "function"
+      }
+    ]
+
+  //"Instance to intercat with the tricketSmartContract"///
+  const tricketSmartContractInstance = new ethers.Contract(tricketSmartContractAddress, tricketSmartContractFullAbi, provider);
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //"biconomyMetaTx setUp"////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //"jsFunctions"/////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  async function getScData()
+  {
+    let _quote = await tricketSmartContractInstance.quote();
+    setQuote(_quote);
+
+    let _trustedForwarder = await tricketSmartContractInstance.getTrustedForwarder();
+    setTrustedForwarder(_trustedForwarder);
+  }
+
+  async function requestAccount() 
+  {
+    console.log("Este es un log de console.");
+
+    if (window.ethereum) 
+    {
+      console.log("Si esta insatalado.");
+
+      try 
+      {
+        let accounts = await window.ethereum.request({ method: "eth_requestAccounts",});
+
+        const _signer = provider.getSigner();
+
+        setUserAddress(accounts[0]);
+        setSigner(_signer);
+        console.log(accounts);
+      }
+      catch (error) 
+      {
+        console.log("ERROR ACCOUNTS.");
+      }
+    }
+    else 
+    {
+      console.log("no esta instalado.");
+    }
+  }
+
+  async function callChangeNormalQuote(paramNewNormalQuote)
+  {
+    console.log("This is a log from the changeNormalQuoteFunction.");
+    console.log(paramNewNormalQuote);
+    
+    const changeNormalQuoteTx = await tricketSmartContractInstance.connect(signer).changeQuote(paramNewNormalQuote);
+    const changeNormalQuoteReceipt = await changeNormalQuoteTx.wait();
+    
+    window.location.reload();
+  }
+
+  async function callChangeMetaQuote(paramNewMetaQuote)
+  {
+    console.log("This is a quote from the changeMetaQuoteFunction.");
+  }
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  //"Call/Initialize functions and data"//////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // getScData();
+
+
+
+
+
   return (
-    <>
-      <Head>
-        <title>Create Next App</title>
-        <meta name="description" content="Generated by create next app" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Get started by editing&nbsp;
-            <code className={styles.code}>pages/index.js</code>
-          </p>
-          <div>
-            <a
-              href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              By{' '}
-              <Image
-                src="/vercel.svg"
-                alt="Vercel Logo"
-                className={styles.vercelLogo}
-                width={100}
-                height={24}
-                priority
-              />
-            </a>
-          </div>
-        </div>
+    <div>
+      {/*tricketAppText and connectMetamaskButton*/}
+      <div>
+        TRICKET APP
 
-        <div className={styles.center}>
-          <Image
-            className={styles.logo}
-            src="/next.svg"
-            alt="Next.js Logo"
-            width={180}
-            height={37}
-            priority
-          />
-          <div className={styles.thirteen}>
-            <Image
-              src="/thirteen.svg"
-              alt="13"
-              width={40}
-              height={31}
-              priority
-            />
-          </div>
-        </div>
+        <a style={{ marginLeft: '16rem' }}>
+          <button type="button" onClick={requestAccount}>
+            connectMetamask
+          </button>
+        </a>
+      </div>
 
-        <div className={styles.grid}>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Docs <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Find in-depth information about Next.js features and&nbsp;API.
-            </p>
-          </a>
+      {/*signerAddressValueDisplay (below metamaskButton)*/}
+      <div>
+        <a style={{ marginLeft: '23rem' }}>
+          Address: {userAddress}
+        </a>
+      </div>
 
-          <a
-            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Learn <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Learn about Next.js in an interactive course with&nbsp;quizzes!
-            </p>
-          </a>
+      <div>
+        -
+      </div>
 
-          <a
-            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Templates <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Discover and deploy boilerplate example Next.js&nbsp;projects.
-            </p>
-          </a>
+      {/*quoteValueDisplay*/}
+      <div>
+        <a style={{ marginLeft: '11rem' }}>
+          Quote: {quote}
+        </a>
+      </div>
 
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h2 className={inter.className}>
-              Deploy <span>-&gt;</span>
-            </h2>
-            <p className={inter.className}>
-              Instantly deploy your Next.js site to a shareable URL
-              with&nbsp;Vercel.
-            </p>
+      <div>
+        -
+      </div>
+
+      {/*normalAndMetaQuoteFields*/}
+      <div>
+        {/*normalQuoteInputAndButton*/}
+        <div>
+          <a style={{ marginLeft: '1rem' }}>
+            writeNewNormalQuote:
+            <input name="normalQuote" onChange={event => setNormalQuoteInputValue(event.target.value)}/>
+            <button type="button" onClick={() => callChangeNormalQuote(normalQuoteInputValue)}>setNewNormalQuote</button>
           </a>
         </div>
-      </main>
-    </>
-  )
+
+        {/*metaQuoteInputAndButton*/}
+        <div>
+          <a style={{ marginLeft: '2rem' }}>
+            writeNewMetaQuote:
+            <input name="metaQuote" onChange={event => setMetaQuoteInputValue(event.target.value)}/>
+            <button type="button" onClick={() => callChangeMetaQuote(metaQuoteInputValue)}>setNewMetaQuote</button>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        -
+      </div>
+      <div>
+        -
+      </div>
+
+      {/*trustedForwarderValueDisplay*/}
+      <div>
+        <a style={{ marginLeft: '1rem' }}>
+          Trusted Forwarder: {trustedForwarder}
+        </a>
+      </div>
+    </div>
+  );
 }
+
+export default App;
